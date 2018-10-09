@@ -21,14 +21,15 @@ a = 1
 from minisom import MiniSom
 som = MiniSom(x = 10, y = 10, input_len = 15, sigma = 1.0, learning_rate = 0.5)
 som.random_weights_init(X)
-som.train_random(data = X, num_iteration = 1)
+som.train_random(data = X, num_iteration = 100)
 
 # Visualizing the results
 # mid = mean inter-neuron distance between neurons
 # higher mid = outlier = encoded in color
 from pylab import bone, pcolor, colorbar, plot, show
 bone()
-pcolor(som.distance_map().T)    # T is transpose of the mid matrix
+som_mid_matrix = som.distance_map().T
+pcolor(som_mid_matrix)    # T is transpose of the mid matrix
 colorbar()
 # highlight customers 
 # red - customers who didnt get approval
@@ -48,6 +49,18 @@ for i, customer in enumerate(X):
 show()
 
 
+# finding the frauds - those outliers who got approval
+# mappings is a dict with key = som coordinates and value = array of customers
 
+mappings = som.win_map(X)
+frauds = []
+# getting frauds from the som mid matrix
+for row in range(len(som_mid_matrix)):
+    for col in range(len(som_mid_matrix[0])):
+        if som_mid_matrix[row][col] > 0.9:
+            for customer in mappings[(row, col)]:
+                frauds.append(customer)
 
-a = 1
+# revert normalization
+frauds = sc.inverse_transform(frauds)
+
